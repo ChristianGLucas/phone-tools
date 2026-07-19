@@ -1,0 +1,143 @@
+// Data contracts for christiangeorgelucas/phone-tools.
+//
+// One canonical PhoneNumber envelope is emitted by Parse and repeated by Extract;
+// Validate / Format / CountryInfo return small purpose-specific results. Every
+// output carries a string error/reason field so malformed input is returned as
+// structured data, never a crash.
+//
+// proto3 JSON note: default scalar values (bool false, "", 0) are omitted from the
+// JSON emitted over the HTTP bridge. Consumers MUST treat a missing `valid`,
+// `possible`, or `known` as false, and a missing string as "".
+
+syntax = "proto3";
+
+package christiangeorgelucas.phone_tools;
+
+// Input to Parse / Validate / Format / Extract: a raw phone string plus an
+// optional default region. default_country is an ISO 3166-1 alpha-2 code
+// (e.g. "US", "GB", "JP") used to interpret numbers written in national form
+// without a leading "+". It is ignored for numbers already in +E.164 form.
+message ParseInput {
+  // The raw phone text to parse, e.g. "+1 415 555 2671" or "(415) 555-2671".
+  string text = 1;
+  // Optional ISO 3166-1 alpha-2 region for national-format numbers, e.g. "US".
+  string default_country = 2;
+}
+
+// The canonical parsed phone number. When the input could not be parsed, `valid`
+// and `possible` are false and `error` explains why (the other fields are empty).
+message PhoneNumber {
+  // True only if the number is valid for its region (length + prefix rules).
+  bool valid = 1;
+  // True if the number's length is plausible for the region (weaker than valid).
+  bool possible = 2;
+  // Canonical +E.164 form, e.g. "+14155552671". The interoperable representation.
+  string e164 = 3;
+  // National display form, e.g. "(415) 555-2671".
+  string national = 4;
+  // International display form, e.g. "+1 415 555 2671" (styling per libphonenumber-js).
+  string international = 5;
+  // RFC 3966 "tel:" URI form, e.g. "tel:+14155552671".
+  string rfc3966 = 6;
+  // Detected ISO 3166-1 alpha-2 region, e.g. "US".
+  string country = 7;
+  // Country calling code without "+", e.g. "1", "44".
+  string country_calling_code = 8;
+  // Number type: MOBILE, FIXED_LINE, FIXED_LINE_OR_MOBILE, TOLL_FREE,
+  // PREMIUM_RATE, SHARED_COST, VOIP, PERSONAL_NUMBER, PAGER, UAN, VOICEMAIL,
+  // or UNKNOWN.
+  string type = 9;
+  // Extension digits, if any (e.g. "1234"); empty otherwise.
+  string ext = 10;
+  // Why the number is not valid: empty when valid; NOT_A_NUMBER / TOO_SHORT /
+  // TOO_LONG / INVALID_LENGTH when unparseable or the wrong length; INVALID when
+  // the length is plausible but it fails the region's rules.
+  string error = 11;
+}
+
+// Input to Validate.
+message ValidateInput {
+  // The raw phone text to validate.
+  string text = 1;
+  // Optional ISO 3166-1 alpha-2 region for national-format numbers.
+  string default_country = 2;
+}
+
+// A compact validity verdict with a machine-readable reason.
+message Validation {
+  // True only if the number is valid for its region.
+  bool valid = 1;
+  // True if the number's length is plausible for the region.
+  bool possible = 2;
+  // Detected region when the number parsed, e.g. "US"; empty otherwise.
+  string country = 3;
+  // Number type when known (see PhoneNumber.type); empty when not parseable.
+  string type = 4;
+  // Machine-readable verdict reason: VALID, TOO_SHORT, TOO_LONG, INVALID_LENGTH,
+  // INVALID_COUNTRY, NOT_A_NUMBER, or INVALID (valid length but fails region rules).
+  string reason = 5;
+}
+
+// Input to Format: reformat a phone string into a chosen notation.
+message FormatInput {
+  // The raw phone text to reformat.
+  string text = 1;
+  // Optional ISO 3166-1 alpha-2 region for national-format numbers.
+  string default_country = 2;
+  // Target notation: E.164, NATIONAL, INTERNATIONAL, or RFC3966
+  // (case-insensitive; defaults to E.164 when empty).
+  string format = 3;
+}
+
+// The reformatted number.
+message Formatted {
+  // The formatted phone string in the requested notation; empty on error.
+  string text = 1;
+  // The notation actually applied (normalized upper-case), e.g. "E.164".
+  string format = 2;
+  // True if the input parsed to a valid number.
+  bool valid = 3;
+  // Reason formatting failed; empty on success.
+  string error = 4;
+}
+
+// Input to Extract: scan free text for phone numbers.
+message ExtractInput {
+  // Free text that may contain zero or more phone numbers.
+  string text = 1;
+  // Optional ISO 3166-1 alpha-2 region used to interpret national-format numbers
+  // found without a leading "+".
+  string default_country = 2;
+}
+
+// All phone numbers discovered in the input text.
+message Extracted {
+  // Every phone number found, in order of appearance.
+  repeated PhoneNumber numbers = 1;
+  // Count of numbers found (== numbers.length).
+  int32 count = 2;
+  // Reason the scan returned early (INPUT_TOO_LONG when the text exceeds the
+  // scan cap, RESULT_LIMIT when more numbers exist than the result cap); empty
+  // on a complete scan.
+  string error = 3;
+}
+
+// Input to CountryInfo: look up dialing metadata for a region.
+message CountryInfoInput {
+  // ISO 3166-1 alpha-2 region code, e.g. "US", "GB", "JP".
+  string country = 1;
+}
+
+// Dialing metadata for a region, sourced from bundled libphonenumber metadata.
+message CountryInfo {
+  // The requested region, upper-cased, e.g. "GB".
+  string country = 1;
+  // The country calling code without "+", e.g. "44".
+  string calling_code = 2;
+  // A valid example mobile number for the region in +E.164 form, when available.
+  string example_mobile_e164 = 3;
+  // True if the region code is known to the bundled metadata.
+  bool known = 4;
+  // Reason the lookup failed (e.g. unknown region); empty on success.
+  string error = 5;
+}
