@@ -21,8 +21,9 @@ export function countryInfo(ax: AxiomContext, input: CountryInfoInput): CountryI
   out.setCountry(cc);
 
   if (!isKnownCountry(cc)) {
+    // The requested value is echoed in `country`; `error` is a machine token.
     out.setKnown(false);
-    out.setError(`unknown region: ${cc || '(empty)'}`);
+    out.setError('UNKNOWN_REGION');
     return out;
   }
 

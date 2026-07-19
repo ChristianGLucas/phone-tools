@@ -50,8 +50,10 @@ message PhoneNumber {
   // Extension digits, if any (e.g. "1234"); empty otherwise.
   string ext = 10;
   // Why the number is not valid: empty when valid; NOT_A_NUMBER / TOO_SHORT /
-  // TOO_LONG / INVALID_LENGTH when unparseable or the wrong length; INVALID when
-  // the length is plausible but it fails the region's rules.
+  // TOO_LONG / INVALID_LENGTH / INVALID_COUNTRY when unparseable, the wrong
+  // length, or missing a usable region; INPUT_TOO_LONG when the input string
+  // exceeds the length cap; INVALID when the length is plausible but it fails
+  // the region's rules.
   string error = 11;
 }
 
@@ -74,7 +76,8 @@ message Validation {
   // Number type when known (see PhoneNumber.type); empty when not parseable.
   string type = 4;
   // Machine-readable verdict reason: VALID, TOO_SHORT, TOO_LONG, INVALID_LENGTH,
-  // INVALID_COUNTRY, NOT_A_NUMBER, or INVALID (valid length but fails region rules).
+  // INVALID_COUNTRY, NOT_A_NUMBER, INPUT_TOO_LONG (input exceeds the length cap),
+  // or INVALID (valid length but fails region rules).
   string reason = 5;
 }
 
@@ -91,13 +94,19 @@ message FormatInput {
 
 // The reformatted number.
 message Formatted {
-  // The formatted phone string in the requested notation; empty on error.
+  // The formatted phone string in the requested notation; empty when no number
+  // could be produced. For a parseable-but-invalid number this holds the
+  // best-effort formatting while `error` is set — check `valid`/`error`.
   string text = 1;
-  // The notation actually applied (normalized upper-case), e.g. "E.164".
+  // The notation actually applied (normalized upper-case), e.g. "E.164"; empty
+  // when the requested format was unknown (nothing applied).
   string format = 2;
   // True if the input parsed to a valid number.
   bool valid = 3;
-  // Reason formatting failed; empty on success.
+  // Empty on a clean, valid result. Otherwise: UNKNOWN_FORMAT (unrecognized
+  // target notation), NOT_A_NUMBER / TOO_SHORT / TOO_LONG / INVALID_LENGTH /
+  // INVALID_COUNTRY (unparseable), INPUT_TOO_LONG (input exceeds the length cap),
+  // or INVALID (parseable but not valid; `text` still holds best-effort output).
   string error = 4;
 }
 
@@ -138,6 +147,7 @@ message CountryInfo {
   string example_mobile_e164 = 3;
   // True if the region code is known to the bundled metadata.
   bool known = 4;
-  // Reason the lookup failed (e.g. unknown region); empty on success.
+  // UNKNOWN_REGION when the requested code is empty or not a known ISO alpha-2
+  // region; empty on success. The requested value is echoed in `country`.
   string error = 5;
 }

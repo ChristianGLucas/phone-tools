@@ -44,6 +44,18 @@ describe('Validate', () => {
     expect(validate(ctx, mk('hello world')).getReason()).toBe('NOT_A_NUMBER');
   });
 
+  it('does not validate prose that merely contains a number (strict gate)', () => {
+    const r = validate(ctx, mk('my cell is 415 555 2671 thanks!', 'US'));
+    expect(r.getValid()).toBe(false);
+    expect(r.getReason()).not.toBe('VALID');
+  });
+
+  it('does not validate a number with trailing junk', () => {
+    const r = validate(ctx, mk('+14155552671 call me maybe'));
+    expect(r.getValid()).toBe(false);
+    expect(r.getReason()).not.toBe('VALID');
+  });
+
   it('reports INVALID_COUNTRY for a national number with an unknown region', () => {
     const r = validate(ctx, mk('020 7946 0958', 'ZZ'));
     expect(r.getValid()).toBe(false);

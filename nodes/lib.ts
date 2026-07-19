@@ -40,6 +40,19 @@ export function mapType(p: LibPhoneNumber): string {
   return p.getType() || 'UNKNOWN';
 }
 
+// Strict single-number parse: the WHOLE (trimmed) string must be one phone
+// number. `extract: false` disables libphonenumber-js's default behavior of
+// pulling a number out of surrounding prose, so "call me at 415 555 2671 ok?"
+// is rejected rather than silently accepted. Used by Parse/Validate/Format;
+// Extract deliberately keeps the extract-from-text behavior via
+// findPhoneNumbersInText.
+export function parseStrict(text: string, country?: CountryCode): LibPhoneNumber | undefined {
+  const t = text.trim();
+  return country
+    ? parsePhoneNumberFromString(t, { defaultCountry: country, extract: false })
+    : parsePhoneNumberFromString(t, { extract: false });
+}
+
 // Fill a canonical PhoneNumber message from a parsed libphonenumber-js number.
 // `error` consistently explains why the number is not valid — empty when valid,
 // INVALID when the length is plausible but the number fails region rules, or a
@@ -80,7 +93,7 @@ export function errorPhoneNumber(reason: string): PhoneNumber {
 // number is still unparseable (treated as NOT_A_NUMBER).
 export function lengthReason(text: string, country?: CountryCode): string {
   try {
-    return validatePhoneNumberLength(text, country) || 'NOT_A_NUMBER';
+    return validatePhoneNumberLength(text.trim(), country) || 'NOT_A_NUMBER';
   } catch {
     return 'NOT_A_NUMBER';
   }

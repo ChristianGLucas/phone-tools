@@ -1,7 +1,7 @@
 import { ValidateInput, Validation } from '../gen/messages_pb';
 import { AxiomContext } from '../gen/axiomContext';
 import {
-  parsePhoneNumberFromString,
+  parseStrict,
   asCountryCode,
   mapType,
   lengthReason,
@@ -15,7 +15,9 @@ import {
  * and number type, and a machine-readable `reason` — VALID, TOO_SHORT, TOO_LONG,
  * INVALID_LENGTH, INVALID_COUNTRY, NOT_A_NUMBER, or INVALID (correct length but
  * fails region rules). Use this for a yes/no gate; use Parse for the full
- * breakdown. Deterministic and fully offline.
+ * breakdown. Parses strictly — the whole string must be one phone number, so
+ * prose that merely contains a number does not validate. Deterministic and
+ * fully offline.
  */
 export function validate(ax: AxiomContext, input: ValidateInput): Validation {
   const out = new Validation();
@@ -38,9 +40,9 @@ export function validate(ax: AxiomContext, input: ValidateInput): Validation {
     return out;
   }
 
-  const p = parsePhoneNumberFromString(text, country);
+  const p = parseStrict(text, country);
   if (!p) {
-    // Could not parse at all: report the length-based reason.
+    // Could not parse the whole string as one number: report the reason.
     out.setReason(lengthReason(text, country));
     return out;
   }

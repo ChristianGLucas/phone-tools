@@ -31,6 +31,11 @@ metadata) so number-type detection is accurate.
 national-format numbers written without a leading `+`; it is ignored for numbers
 already in `+E.164` form.
 
+`Parse`, `Validate`, and `Format` parse **strictly**: the whole string must be a
+single phone number, so prose that merely contains a number (`"call me at 415
+555 2671 ok?"`) does not parse — use `Extract` to pull numbers out of free text.
+Alphabetic vanity numbers (e.g. `1-800-FLOWERS`) are not supported.
+
 ### The canonical `PhoneNumber` envelope
 
 `Parse` emits it and `Extract` repeats it. Key fields:
@@ -45,24 +50,30 @@ already in `+E.164` form.
 
 **proto3 JSON note:** default scalar values (`false`, `""`, `0`) are omitted from
 the JSON emitted over the HTTP bridge, so a consumer must treat a missing
-`valid`/`possible`/`known` as `false`.
+`valid`/`possible`/`known` as `false`. In particular, a successful `Extract` scan
+that finds nothing returns `{}` — treat a missing `count` as `0` and a missing
+`numbers` as `[]`.
 
 ## Correctness
 
-Golden values in the test suite are cross-checked against Google's **independent**
-libphonenumber port (`google-libphonenumber`), a different codebase: E.164,
-national form, region, number type, and validity agree across both
-implementations. (International-form *styling* differs between the two libraries;
-this package follows libphonenumber-js conventions for that field, while `e164` —
-the interoperable representation — is oracle-verified.) `google-libphonenumber`
-is a **dev-only** check and is not a runtime dependency.
+The test suite includes an **independent-oracle** test (`nodes/oracle_test.ts`)
+that runs the live `Parse` node against Google's separate libphonenumber port
+(`google-libphonenumber`, a different codebase) over numbers spanning several
+regions and types, asserting they agree on the interoperable fields: **E.164,
+region, number type, and validity**. This catches library-level bugs that a
+suite checking `libphonenumber-js` against itself never could. (International-form
+*styling* differs between the two libraries by design; this package follows
+libphonenumber-js conventions for that field, and it is not asserted against the
+oracle.) `google-libphonenumber` is a **dev-only** dependency, never shipped at
+runtime.
 
 ## Composability
 
-The nodes chain by field adapters. A runnable proof flow lives at
-`flows/phone-countryinfo-parse.flow.yaml`: `CountryInfo → Parse` — look up a
+The nodes chain by field adapters. A runnable proof flow ships with this package
+at `flows/phone-countryinfo-parse.flow.yaml`: `CountryInfo → Parse` — look up a
 region's example mobile number, then parse it into the full `PhoneNumber`
-breakdown. It compiles and runs end to end.
+breakdown. It compiles and runs end to end (`axiom flow compile` then
+`axiom flow run <artifact> -d '{"country":"GB"}'`).
 
 ## Development
 

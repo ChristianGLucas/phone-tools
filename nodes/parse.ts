@@ -1,7 +1,7 @@
 import { ParseInput, PhoneNumber } from '../gen/messages_pb';
 import { AxiomContext } from '../gen/axiomContext';
 import {
-  parsePhoneNumberFromString,
+  parseStrict,
   asCountryCode,
   newPhoneNumber,
   errorPhoneNumber,
@@ -17,7 +17,9 @@ import {
  * but is not valid for its region is still returned with `valid=false`; input
  * that cannot be parsed at all returns a reason in `error` (NOT_A_NUMBER,
  * TOO_SHORT, and similar) with `valid=false`. Deterministic and fully offline.
- * `default_country` (ISO alpha-2) interprets national-format numbers.
+ * `default_country` (ISO alpha-2) interprets national-format numbers. Parses
+ * strictly: the whole string must be one phone number, not a number embedded in
+ * prose. Alphabetic vanity numbers (e.g. 1-800-FLOWERS) are not supported.
  */
 export function parse(ax: AxiomContext, input: ParseInput): PhoneNumber {
   const text = input.getText() || '';
@@ -25,7 +27,7 @@ export function parse(ax: AxiomContext, input: ParseInput): PhoneNumber {
   if (text.length > MAX_SINGLE_LEN) return errorPhoneNumber('INPUT_TOO_LONG');
 
   const country = asCountryCode(input.getDefaultCountry());
-  const p = parsePhoneNumberFromString(text, country);
+  const p = parseStrict(text, country);
   if (!p) return errorPhoneNumber(lengthReason(text, country));
   return newPhoneNumber(p);
 }

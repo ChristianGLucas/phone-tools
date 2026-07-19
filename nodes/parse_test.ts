@@ -77,6 +77,18 @@ describe('Parse', () => {
     expect(r.getError()).toBe('NOT_A_NUMBER');
   });
 
+  it('does not extract a number from surrounding prose (strict parse)', () => {
+    const r = parse(ctx, mk('my cell is 415 555 2671 thanks!', 'US'));
+    expect(r.getValid()).toBe(false);
+    expect(r.getE164()).toBe('');
+  });
+
+  it('does not accept trailing junk after a valid number', () => {
+    const r = parse(ctx, mk('+14155552671 call me maybe'));
+    expect(r.getValid()).toBe(false);
+    expect(r.getE164()).toBe('');
+  });
+
   it('rejects over-long input deterministically', () => {
     const r = parse(ctx, mk('+' + '1'.repeat(500)));
     expect(r.getError()).toBe('INPUT_TOO_LONG');

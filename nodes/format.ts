@@ -1,7 +1,7 @@
 import { FormatInput, Formatted } from '../gen/messages_pb';
 import { AxiomContext } from '../gen/axiomContext';
 import {
-  parsePhoneNumberFromString,
+  parseStrict,
   asCountryCode,
   lengthReason,
   up,
@@ -20,11 +20,13 @@ const FORMATS: Record<string, 'E.164' | 'NATIONAL' | 'INTERNATIONAL' | 'RFC3966'
 
 /**
  * Reformat a phone number into a chosen notation: E.164 (default), NATIONAL,
- * INTERNATIONAL, or RFC3966. Parses the input (optionally with `default_country`
- * for national-format numbers) and re-emits it in the requested `format`. Sets
- * `valid` per region rules; formatting is best-effort for a parseable-but-invalid
- * number. Unparseable input or an unknown format returns `error`. Deterministic
- * and fully offline.
+ * INTERNATIONAL, or RFC3966. Parses the input strictly (optionally with
+ * `default_country` for national-format numbers) and re-emits it in the
+ * requested `format`. Sets `valid` per region rules; formatting is best-effort
+ * for a parseable-but-invalid number, in which case `error` carries the
+ * invalidity reason so a caller is not misled into treating it as clean.
+ * Unparseable input returns `error`; an unknown format returns
+ * `error=UNKNOWN_FORMAT`. Deterministic and fully offline.
  */
 export function format(ax: AxiomContext, input: FormatInput): Formatted {
   const out = new Formatted();
@@ -32,8 +34,8 @@ export function format(ax: AxiomContext, input: FormatInput): Formatted {
   const requested = up(input.getFormat()) || 'E.164';
   const fmt = FORMATS[requested];
   if (!fmt) {
-    out.setFormat(requested);
-    out.setError(`unknown format: ${input.getFormat()}`);
+    // Nothing applied — leave `format` empty and report a machine token.
+    out.setError('UNKNOWN_FORMAT');
     return out;
   }
   out.setFormat(fmt);
@@ -49,13 +51,17 @@ export function format(ax: AxiomContext, input: FormatInput): Formatted {
   }
 
   const country = asCountryCode(input.getDefaultCountry());
-  const p = parsePhoneNumberFromString(text, country);
+  const p = parseStrict(text, country);
   if (!p) {
     out.setError(lengthReason(text, country));
     return out;
   }
 
-  out.setValid(p.isValid());
+  const valid = p.isValid();
+  out.setValid(valid);
   out.setText(p.format(fmt));
+  // Best-effort text is still returned, but flag invalidity so an error-only
+  // consumer is not misled into treating an invalid number as clean.
+  if (!valid) out.setError(p.isPossible() ? 'INVALID' : lengthReason(p.number));
   return out;
 }

@@ -35,12 +35,13 @@ describe('CountryInfo', () => {
     const r = countryInfo(ctx, mk('ZZ'));
     expect(r.getKnown()).toBe(false);
     expect(r.getCallingCode()).toBe('');
-    expect(r.getError()).toContain('unknown region');
+    expect(r.getError()).toBe('UNKNOWN_REGION');
+    expect(r.getCountry()).toBe('ZZ'); // requested value echoed
   });
 
   it('reports empty input as unknown', () => {
     const r = countryInfo(ctx, mk(''));
     expect(r.getKnown()).toBe(false);
-    expect(r.getError()).toContain('unknown region');
+    expect(r.getError()).toBe('UNKNOWN_REGION');
   });
 });

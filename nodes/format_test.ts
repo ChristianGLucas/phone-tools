@@ -41,16 +41,31 @@ describe('Format', () => {
     expect(r.getText()).toBe('+14155552671');
   });
 
-  it('rejects an unknown format with an error', () => {
+  it('rejects an unknown format with a machine token and empty format', () => {
     const r = format(ctx, mk('+14155552671', 'morse'));
     expect(r.getText()).toBe('');
-    expect(r.getError()).toContain('unknown format');
+    expect(r.getFormat()).toBe('');
+    expect(r.getError()).toBe('UNKNOWN_FORMAT');
   });
 
   it('reports a parse error for unparseable input', () => {
     const r = format(ctx, mk('nope', 'E.164'));
     expect(r.getText()).toBe('');
     expect(r.getError()).toBe('NOT_A_NUMBER');
+  });
+
+  it('flags a parseable-but-invalid number with best-effort text and error INVALID', () => {
+    const r = format(ctx, mk('+15555555555', 'NATIONAL'));
+    expect(r.getValid()).toBe(false);
+    expect(r.getError()).toBe('INVALID');
+    expect(r.getText().length).toBeGreaterThan(0); // best-effort formatting still returned
+  });
+
+  it('rejects prose that merely contains a number (strict parse)', () => {
+    const r = format(ctx, mk('call me at 415 555 2671 ok?', 'E.164', 'US'));
+    expect(r.getText()).toBe('');
+    expect(r.getError()).not.toBe('');
+    expect(r.getError()).not.toBe('INVALID');
   });
 
   it('rejects over-long input deterministically', () => {

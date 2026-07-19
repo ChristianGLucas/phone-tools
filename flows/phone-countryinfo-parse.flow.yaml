@@ -1,0 +1,17 @@
+name: phone-countryinfo-parse
+description: Look up a region's example mobile number, then parse it into a full PhoneNumber breakdown — proves phone-tools nodes compose by field adapter.
+
+nodes:
+  - alias: info
+    package: christiangeorgelucas/phone-tools@0.1.1
+    node: CountryInfo
+  - alias: parse
+    package: christiangeorgelucas/phone-tools@0.1.1
+    node: Parse
+
+edges:
+  - from: info
+    to: parse
+    adapter:
+      # source expression (CountryInfo.example_mobile_e164) -> destination field (ParseInput.text)
+      "example_mobile_e164": text
