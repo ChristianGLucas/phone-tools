@@ -15,11 +15,6 @@ import {
 import examples from 'libphonenumber-js/mobile/examples';
 import { PhoneNumber } from '../gen/messages_pb';
 
-// Input caps — bound every input-derived cost deterministically.
-export const MAX_SINGLE_LEN = 200; // a single phone string (Parse/Validate/Format)
-export const MAX_EXTRACT_LEN = 50_000; // free-text scan (Extract)
-export const MAX_EXTRACT_RESULTS = 1000; // cap emitted numbers (Extract)
-
 const KNOWN_COUNTRIES = new Set<string>(getCountries());
 
 export function up(raw: string): string {

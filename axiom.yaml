@@ -1,5 +1,5 @@
 name: christiangeorgelucas/phone-tools
-version: 0.1.1
+version: 0.1.2
 language: typescript
 description: Composable phone-number nodes — parse, validate, format (E.164/national/international/RFC3966), extract from free text, and look up region dialing metadata. Offline and deterministic, wrapping libphonenumber-js.
 nodes:

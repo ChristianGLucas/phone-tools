@@ -6,7 +6,6 @@ import {
   mapType,
   lengthReason,
   up,
-  MAX_SINGLE_LEN,
 } from './lib';
 
 /**
@@ -24,10 +23,6 @@ export function validate(ax: AxiomContext, input: ValidateInput): Validation {
   const text = input.getText() || '';
   if (text.length === 0) {
     out.setReason('NOT_A_NUMBER');
-    return out;
-  }
-  if (text.length > MAX_SINGLE_LEN) {
-    out.setReason('INPUT_TOO_LONG');
     return out;
   }
 

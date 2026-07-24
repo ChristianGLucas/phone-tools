@@ -39,9 +39,9 @@ describe('Extract', () => {
     expect(r.getNumbersList()[0].getType()).toBe('FIXED_LINE_OR_MOBILE');
   });
 
-  it('reports INPUT_TOO_LONG rather than truncating silently', () => {
+  it('handles a large (well over the old scan-length cap) input without crashing', () => {
     const r = extract(ctx, mk('x'.repeat(60_000)));
-    expect(r.getError()).toBe('INPUT_TOO_LONG');
+    expect(r.getError()).toBe('');
     expect(r.getCount()).toBe(0);
   });
 

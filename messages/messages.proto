@@ -51,9 +51,8 @@ message PhoneNumber {
   string ext = 10;
   // Why the number is not valid: empty when valid; NOT_A_NUMBER / TOO_SHORT /
   // TOO_LONG / INVALID_LENGTH / INVALID_COUNTRY when unparseable, the wrong
-  // length, or missing a usable region; INPUT_TOO_LONG when the input string
-  // exceeds the length cap; INVALID when the length is plausible but it fails
-  // the region's rules.
+  // length, or missing a usable region; INVALID when the length is plausible
+  // but it fails the region's rules.
   string error = 11;
 }
 
@@ -76,8 +75,8 @@ message Validation {
   // Number type when known (see PhoneNumber.type); empty when not parseable.
   string type = 4;
   // Machine-readable verdict reason: VALID, TOO_SHORT, TOO_LONG, INVALID_LENGTH,
-  // INVALID_COUNTRY, NOT_A_NUMBER, INPUT_TOO_LONG (input exceeds the length cap),
-  // or INVALID (valid length but fails region rules).
+  // INVALID_COUNTRY, NOT_A_NUMBER, or INVALID (valid length but fails region
+  // rules).
   string reason = 5;
 }
 
@@ -105,8 +104,8 @@ message Formatted {
   bool valid = 3;
   // Empty on a clean, valid result. Otherwise: UNKNOWN_FORMAT (unrecognized
   // target notation), NOT_A_NUMBER / TOO_SHORT / TOO_LONG / INVALID_LENGTH /
-  // INVALID_COUNTRY (unparseable), INPUT_TOO_LONG (input exceeds the length cap),
-  // or INVALID (parseable but not valid; `text` still holds best-effort output).
+  // INVALID_COUNTRY (unparseable), or INVALID (parseable but not valid; `text`
+  // still holds best-effort output).
   string error = 4;
 }
 
@@ -125,9 +124,7 @@ message Extracted {
   repeated PhoneNumber numbers = 1;
   // Count of numbers found (== numbers.length).
   int32 count = 2;
-  // Reason the scan returned early (INPUT_TOO_LONG when the text exceeds the
-  // scan cap, RESULT_LIMIT when more numbers exist than the result cap); empty
-  // on a complete scan.
+  // Always empty; reserved for output-schema stability.
   string error = 3;
 }
 

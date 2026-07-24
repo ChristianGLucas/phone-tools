@@ -5,7 +5,6 @@ import {
   asCountryCode,
   lengthReason,
   up,
-  MAX_SINGLE_LEN,
 } from './lib';
 
 // Accepted target notations (input is case-insensitive; "E164" is accepted as
@@ -43,10 +42,6 @@ export function format(ax: AxiomContext, input: FormatInput): Formatted {
   const text = input.getText() || '';
   if (text.length === 0) {
     out.setError('NOT_A_NUMBER');
-    return out;
-  }
-  if (text.length > MAX_SINGLE_LEN) {
-    out.setError('INPUT_TOO_LONG');
     return out;
   }
 

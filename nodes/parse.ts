@@ -6,7 +6,6 @@ import {
   newPhoneNumber,
   errorPhoneNumber,
   lengthReason,
-  MAX_SINGLE_LEN,
 } from './lib';
 
 /**
@@ -24,7 +23,6 @@ import {
 export function parse(ax: AxiomContext, input: ParseInput): PhoneNumber {
   const text = input.getText() || '';
   if (text.length === 0) return errorPhoneNumber('NOT_A_NUMBER');
-  if (text.length > MAX_SINGLE_LEN) return errorPhoneNumber('INPUT_TOO_LONG');
 
   const country = asCountryCode(input.getDefaultCountry());
   const p = parseStrict(text, country);

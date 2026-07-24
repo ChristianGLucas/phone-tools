@@ -68,8 +68,9 @@ describe('Format', () => {
     expect(r.getError()).not.toBe('INVALID');
   });
 
-  it('rejects over-long input deterministically', () => {
+  it('handles a very long (well over the old length cap) input without crashing', () => {
     const r = format(ctx, mk('9'.repeat(500), 'E.164'));
-    expect(r.getError()).toBe('INPUT_TOO_LONG');
+    expect(r.getError().length).toBeGreaterThan(0);
+    expect(r.getValid()).toBe(false);
   });
 });
